@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { auth } from './middleware/auth'
+import auth from '../middleware/auth.middleware'
 
 import {
   getAllContacts,
@@ -8,7 +8,7 @@ import {
   editContact,
   deleteContact,
   deleteManyContacts
-} from './controllers/contacts_controller'
+} from '../controllers/contacts.controller'
 
 const router = Router()
 
@@ -18,6 +18,6 @@ router.get('/:id', auth, getContact)
 router.post('/create', auth, createContact)
 router.put('/edit/:id', auth, editContact)
 router.delete('/delete/:id', auth, deleteContact)
-router.post('/delete-many', auth, deleteManyContacts)
+router.delete('/delete-many', auth, deleteManyContacts)
 
 export default router

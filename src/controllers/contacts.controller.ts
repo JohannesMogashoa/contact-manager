@@ -13,7 +13,7 @@ export const getAllContacts: RequestHandler = async (req, res, next) => {
 export const getContact: RequestHandler = async (req, res, next) => {
   try {
     const contact = await prisma.contact.findUnique({ where: { id: req.params.id }, include: { notes: true } })
-    if (!contact || contact.isDeleted) res.status(304).json({ error: 'Invalid contact id' })
+    if (!contact || contact.isDeleted) res.status(404).json({ error: 'Invalid contact id' })
 
     res.status(200).json(contact)
   } catch (error) {

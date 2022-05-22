@@ -1,44 +1,47 @@
-import express, { Request, Response, NextFunction } from 'express'
-import jwt from 'jsonwebtoken'
-import prisma from './client'
-import { login, register } from './controllers/auth_controller'
-import routes from './routes'
+import express, { Request, Response, NextFunction, ErrorRequestHandler } from 'express'
+import { authRoutes, contactsRoutes, notesRoutes } from './routes'
+import morgan from 'morgan'
+import jwtValid from './middleware/jwt.middleware'
 require('dotenv').config()
+
+interface Error {
+  message: string;
+  status: number;
+  name: string
+}
 
 const app = express()
 
 const PORT = process.env.PORT || 3000
 
 app.use(express.json())
+app.use(morgan('dev'))
 
-app.use(async (req: Request, res: Response, next: NextFunction) => {
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.split(' ')[0] === 'Bearer'
-  ) {
-    const accessToken = req.headers.authorization.split(' ')[1]
-    const { userId, exp }: any = jwt.verify(
-      accessToken,
-      process.env.JWT_SECRET
-    )
+app.use('/api/auth', authRoutes)
 
-    // Check if token has expired
-    if (exp < Date.now().valueOf() / 1000) {
-      return res.status(401).json({
-        error: 'JWT token has expired, please login to obtain a new one'
-      })
-    }
-    res.locals.loggedInUser = await prisma.user.findFirst({ where: { id: userId } })
-    next()
-  } else {
-    next()
+app.use(jwtValid)
+
+app.use('/api/contacts', contactsRoutes)
+app.use('/api/notes', notesRoutes)
+
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const err: Error = {
+    name: 'Not Found',
+    message: 'Not Found',
+    status: 404
   }
+  next(err)
 })
 
-app.post('/api/register', register)
-app.post('/api/login', login)
+const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
+  res.status(err.status || 500).json({
+    error: {
+      message: err.message
+    }
+  })
+}
 
-app.use('/api/contacts', routes)
+app.use(errorHandler)
 
 app.listen(PORT, () => {
   return console.log(`Express is listening at http://localhost:${PORT}`)

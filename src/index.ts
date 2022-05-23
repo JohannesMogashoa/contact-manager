@@ -2,6 +2,7 @@ import express, { Request, Response, NextFunction, ErrorRequestHandler } from 'e
 import { authRoutes, contactsRoutes, notesRoutes } from './routes'
 import morgan from 'morgan'
 import jwtValid from './middleware/jwt.middleware'
+import cors from 'cors'
 require('dotenv').config()
 
 interface Error {
@@ -10,12 +11,20 @@ interface Error {
   name: string
 }
 
+const corsOptions = {
+  origin: '*',
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  preflightContinue: false,
+  optionsSuccessStatus: 204
+}
+
 const app = express()
 
 const PORT = process.env.PORT || 3000
 
 app.use(express.json())
-app.use(morgan('dev'))
+app.use(morgan('combined'))
+app.use(cors(corsOptions))
 
 app.use('/api/auth', authRoutes)
 
